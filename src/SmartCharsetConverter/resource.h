@@ -29,6 +29,7 @@
 #define IDC_LISTVIEW                    1040
 #define IDC_BUTTON_START                1050
 #define IDC_BUTTON_CLEAR                1051
+#define IDC_BUTTON_MERGE_EXPORT         1056
 #define IDC_CHECK_CONVERT_RETURN        1052
 #define IDC_RADIO_CRLF                  1053
 #define IDC_RADIO_LF                    1054

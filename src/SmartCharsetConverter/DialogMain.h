@@ -24,6 +24,7 @@
 #include <atomic>
 #include <future>
 #include <iostream>
+#include <map>
 
 const unsigned int WM_MY_MESSAGE = WM_USER + 1;
 struct MyMessage {
@@ -56,6 +57,8 @@ private:
     TListView listview;
     std::unique_ptr<TPopupMenu> rightMenu;
     std::unique_ptr<TPopupMenu> selectLanguageMenu;
+
+    std::map<std::string, std::string> fileToBaseDirMap;
 
     enum class ListViewColumn { INDEX = 0, FILENAME, FILESIZE, ENCODING, LINE_BREAK, TEXT_PIECE };
 
@@ -95,6 +98,9 @@ private:
     };
 
     void StartConvert(const std::vector<std::pair<int, bool>> &restore, const std::vector<Item> &items);
+
+    void MergeAndExport(const std::vector<std::pair<int, bool>> &restore, const std::vector<Item> &items,
+                        const std::string &destFilename);
 
     void OnClose();
 
@@ -178,6 +184,7 @@ private:
 
     COMMAND_HANDLER(IDC_BUTTON_START, BN_CLICKED, OnBnClickedButtonStart)
     COMMAND_HANDLER(IDC_BUTTON_CLEAR, BN_CLICKED, OnBnClickedButtonClear)
+    COMMAND_HANDLER(IDC_BUTTON_MERGE_EXPORT, BN_CLICKED, OnBnClickedButtonMergeExport)
     COMMAND_HANDLER(IDC_BUTTON_SETTINGS, BN_CLICKED, OnBnClickedButtonSettings)
 
     MESSAGE_HANDLER(WM_MY_MESSAGE, OnUser)
@@ -222,6 +229,7 @@ private:
 
     LRESULT OnBnClickedButtonStart(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
     LRESULT OnBnClickedButtonClear(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
+    LRESULT OnBnClickedButtonMergeExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
     LRESULT OnBnClickedButtonSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
 
     void PostUIFunc(std::function<void()> fn);

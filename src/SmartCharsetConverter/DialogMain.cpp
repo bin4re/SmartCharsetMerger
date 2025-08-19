@@ -316,12 +316,13 @@ std::vector<std::string> DialogMain::AddItems(const std::vector<std::string> &pa
     vector<pair<string, string>> failed; // 失败的文件
     vector<string> ignored;              // 忽略的文件
 
-    auto AddItemNoException = [&](const std::string &filename) {
+    auto AddItemNoException = [&](const std::string &filename, const std::string &baseDir) {
         try {
             Core::AddItemResult ret = core->AddItem(filename, filterDotExts);
             if (ret.isIgnore) {
                 return;
             }
+            fileToBaseDirMap[filename] = baseDir;
             PostUIFunc([filename, ret, this]() {
                 AppendListViewItem(filename, ret.filesize, ret.srcCharset, ret.srcLineBreak, ret.strPiece);
             });
@@ -333,6 +334,7 @@ std::vector<std::string> DialogMain::AddItems(const std::vector<std::string> &pa
     for (auto &path : pathes) {
         // 如果是目录
         if (std::filesystem::is_directory(std::filesystem::u8path(path))) {
+            std::string baseDir = path;
             // 遍历指定目录
             auto filenames = TraversalAllFileNames(path);
 
@@ -340,7 +342,7 @@ std::vector<std::string> DialogMain::AddItems(const std::vector<std::string> &pa
                 if (doCancel) {
                     goto AddItemsAbort;
                 }
-                AddItemNoException(filename);
+                AddItemNoException(filename, baseDir);
             }
             continue;
         }
@@ -349,7 +351,8 @@ std::vector<std::string> DialogMain::AddItems(const std::vector<std::string> &pa
         if (doCancel) {
             goto AddItemsAbort;
         }
-        AddItemNoException(path);
+        std::string baseDir = std::filesystem::u8path(path).parent_path().string();
+        AddItemNoException(path, baseDir);
     }
 
 AddItemsAbort:
@@ -718,6 +721,7 @@ LRESULT DialogMain::OnBnClickedButtonStart(WORD /*wNotifyCode*/, WORD /*wID*/, H
 LRESULT DialogMain::OnBnClickedButtonClear(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/) {
     listview.DeleteAllItems();
     core->Clear();
+    fileToBaseDirMap.clear();
     return 0;
 }
 
@@ -726,6 +730,171 @@ LRESULT DialogMain::OnBnClickedButtonSettings(WORD, WORD, HWND, BOOL &) {
     selectLanguageMenu->Popup(m_hWnd);
 
     return 0;
+}
+
+LRESULT DialogMain::OnBnClickedButtonMergeExport(WORD, WORD, HWND, BOOL &) {
+    if (thRunning) {
+        doCancel = true;
+        fu.get();
+        return 0;
+    }
+
+    if (listview.GetItemCount() == 0) {
+        MessageBox(languageService->GetWString(v0_2::StringId::NO_FILE_TO_CONVERT).c_str(),
+                   languageService->GetWString(v0_2::StringId::PROMPT).c_str(), MB_OK | MB_ICONINFORMATION);
+        return 0;
+    }
+
+    TFileDialog dialog(*this, {make_pair(L"Text Files (*.txt)", L"*.txt"), make_pair(L"All Files (*.*)", L"*.*")},
+                       false);
+
+    if (dialog.Save()) {
+        auto destFilename = to_utf8(dialog.GetResult()[0]);
+
+        auto restore = SetBusyState();
+
+        vector<Item> items;
+        for (int i = 0; i < listview.GetItemCount(); ++i) {
+            auto filename = to_utf8(listview.GetItemText(i, static_cast<int>(ListViewColumn::FILENAME)));
+            auto originCode =
+                ToCharsetCode(to_utf8(listview.GetItemText(i, static_cast<int>(ListViewColumn::ENCODING))));
+            auto originLineBreak =
+                ViewNameToLineBreaks(to_utf8(listview.GetItemText(i, static_cast<int>(ListViewColumn::LINE_BREAK))));
+            items.push_back({filename, originCode, originLineBreak});
+        }
+
+        doCancel = false;
+        thRunning = true;
+        fu = std::async(std::launch::async, &DialogMain::MergeAndExport, this, restore, items, destFilename);
+    }
+
+    return 0;
+}
+
+// 读取文件内容到字符串
+std::string ReadFileToString(const std::string &filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open file: " + filename);
+    }
+    std::stringstream ss;
+    ss << file.rdbuf(); // 读取整个文件
+    return ss.str();
+}
+
+// 写入字符串到文件
+void WriteStringToFile(const std::string &filename, const std::string &content) {
+    std::ofstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open file for writing: " + filename);
+    }
+    file << content;
+}
+
+void DialogMain::MergeAndExport(const std::vector<std::pair<int, bool>> &restore, const std::vector<Item> &items,
+                                const std::string &destFilename) try {
+    // 使用RTTI的手法记下恢复事件
+    unique_ptr<void, function<void(void *)>> deferRestore(reinterpret_cast<void *>(1), [this, restore](void *) {
+        PostUIFunc([this, restore]() {
+            RestoreReadyState(restore);
+            thRunning = false;
+        });
+    });
+
+    stringstream ss;
+    vector<pair<string, string>> failed; // 失败文件/失败原因
+
+    // 逐个转换并合并
+    for (int i = 0; i < items.size(); ++i) {
+        if (doCancel) {
+            break;
+        }
+
+        const auto &item = items[i];
+        const auto &filename = item.filename;
+
+        // 更新UI
+        PostUIFunc([=]() {
+            listview.SetItemText(i, static_cast<int>(ListViewColumn::INDEX), (TEXT("->") + to_tstring(i + 1)).c_str());
+            listview.SelectItem(i);
+        });
+
+        try {
+            // 1. 读取文件
+            string content = ReadFileToString(filename);
+
+            // 2. 转换内容
+            ConvertParam param;
+            param.originCode = item.originCode;
+            param.targetCode = core->GetConfig().outputCharset;
+            param.doConvertLineBreaks = core->GetConfig().enableConvertLineBreaks;
+            param.targetLineBreak = core->GetConfig().lineBreak;
+            string convertedContent = Convert(content, param);
+
+            // 3. 计算 rpath
+            string rpath;
+            auto it = fileToBaseDirMap.find(filename);
+            if (it != fileToBaseDirMap.end()) {
+                const auto &baseDir = it->second;
+                rpath = std::filesystem::relative(std::filesystem::u8path(filename), std::filesystem::u8path(baseDir))
+                            .string();
+            } else {
+                // Fallback to just filename if base directory not found
+                rpath = std::filesystem::u8path(filename).filename().string();
+            }
+
+            // 4. 追加到 stringstream
+            ss << "\n==== BEGIN " << rpath << " ====\n```\n";
+            ss << convertedContent;
+            ss << "\n```\n==== END " << rpath << " ====\n";
+
+        } catch (const std::exception &err) {
+            failed.push_back({filename, err.what()});
+        }
+
+        // 恢复UI
+        PostUIFunc([=]() { listview.SetItemText(i, static_cast<int>(ListViewColumn::INDEX), to_tstring(i + 1).c_str()); });
+    }
+
+    if (doCancel) {
+        PostUIFunc([this]() {
+            MessageBox(L"Operation cancelled.", L"Info", MB_OK | MB_ICONINFORMATION);
+        });
+        return;
+    }
+
+    // 5. 写入文件
+    try {
+        WriteStringToFile(destFilename, ss.str());
+    } catch (const std::exception &err) {
+        string errorMsg = "Failed to write to file: " + destFilename + "\nReason: " + err.what();
+        PostUIFunc([this, errorMsg]() {
+            MessageBox(utf8_to_wstring(errorMsg).c_str(), L"Error", MB_OK | MB_ICONERROR);
+        });
+        return;
+    }
+
+    // 6. 显示结果
+    if (!failed.empty()) {
+        string s = "Merge and export completed with some errors.\n\n";
+        s += "Failed to process:\n";
+        for (const auto &pr : failed) {
+            s += pr.first + " - Reason: " + pr.second + "\n";
+        }
+        PostUIFunc([this, s]() {
+            MessageBox(utf8_to_wstring(s).c_str(), L"Warning", MB_OK | MB_ICONWARNING);
+        });
+    } else {
+        string msg = "Successfully merged and exported to:\n" + destFilename;
+        PostUIFunc([this, msg]() {
+            MessageBox(utf8_to_wstring(msg).c_str(), L"Success", MB_OK | MB_ICONINFORMATION);
+        });
+    }
+
+} catch (const std::exception &err) {
+    PostUIFunc([this, err]() {
+        MessageBox(utf8_to_wstring(err.what()).c_str(), L"Error", MB_OK | MB_ICONERROR);
+    });
 }
 
 LRESULT DialogMain::OnBnClickedButtonSetOutputDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
@@ -781,6 +950,7 @@ LRESULT DialogMain::OnRemoveItem(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
         auto filename = to_utf8(listview.GetItemText(i, static_cast<int>(ListViewColumn::FILENAME)));
         listview.DeleteItem(i);
         core->RemoveItem(filename);
+        fileToBaseDirMap.erase(filename);
     }
 
     // 剩下的重新编号
