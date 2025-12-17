@@ -81,6 +81,7 @@
 		[160,"1. Filtro de archivos:"],
 		[161,"Por extensión:"],
 		[162,"Consejo: use el modo \"Especificar manualmente\" para agregar nuevamente, y puede hacer clic derecho en el cuadro de lista para especificar la codificación original manualmente."],
-		[163,"Combinar y Exportar"]
+		[163,"Combinar y Exportar"],
+		[164,"Seleccionar todo"]
 	]
 }

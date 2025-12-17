@@ -171,6 +171,7 @@ private:
     NOTIFY_HANDLER(IDC_LISTVIEW, NM_RCLICK, OnNMRclickListview)
     COMMAND_ID_HANDLER(ID_OPEN_WITH_NOTEPAD, OnOpenWithNotepad)
     COMMAND_ID_HANDLER(ID_REMOVE_ITEM, OnRemoveItem)
+    COMMAND_ID_HANDLER(ID_SELECT_ALL, OnSelectAll)
 
     // 指定原编码
     COMMAND_RANGE_HANDLER(SPECIFY_ORIGIN_CHARSET_ID_START, SPECIFY_ORIGIN_CHARSET_ID_END, OnSpecifyOriginCharset)
@@ -224,6 +225,7 @@ private:
 
     LRESULT OnOpenWithNotepad(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
     LRESULT OnRemoveItem(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
+    LRESULT OnSelectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
     LRESULT OnSpecifyOriginCharset(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
     LRESULT OnSelectLanguage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
 

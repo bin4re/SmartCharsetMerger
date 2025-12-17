@@ -81,6 +81,7 @@
 		[160,"1. File Filter:"],
 		[161,"By Extension:"],
 		[162,"Tip: Use \"Manual Specify\" detection mode to add again, and you can right-click in the list box to specify the original encoding manually."],
-		[163,"Merge Export"]
+		[163,"Merge Export"],
+		[164,"Select All"]
 	]
 }

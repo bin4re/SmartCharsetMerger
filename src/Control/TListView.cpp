@@ -50,3 +50,10 @@ void TListView::SetColumnText(int col, const std::tstring &s) noexcept {
     lvColumn.pszText = buf.data();
     SetColumn(col, &lvColumn);
 }
+
+void TListView::SelectAll() noexcept {
+    int count = GetItemCount();
+    for (int i = 0; i < count; ++i) {
+        SetItemState(i, LVIS_SELECTED, LVIS_SELECTED);
+    }
+}

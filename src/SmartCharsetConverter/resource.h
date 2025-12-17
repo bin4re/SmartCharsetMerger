@@ -50,13 +50,14 @@
 #define ID_SPECIFY_ORIGIN_CHARSET       40006
 #define ID_40007                        40007
 #define ID_LANGUAGE                     40008
+#define ID_SELECT_ALL                   40009
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        112
-#define _APS_NEXT_COMMAND_VALUE         40009
+#define _APS_NEXT_COMMAND_VALUE         40010
 #define _APS_NEXT_CONTROL_VALUE         1065
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

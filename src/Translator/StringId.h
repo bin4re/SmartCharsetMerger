@@ -80,6 +80,7 @@ enum class StringId {
     FILTER_BY_EXTENSION,  // 161: 按后缀过滤
     TIPS_USE_MANUAL_MODE, // 162: 提示使用手动模式
     MERGE_EXPORT,         // 163: 合并导出
+    SELECT_ALL,           // 164: 全选
 
     END
 };

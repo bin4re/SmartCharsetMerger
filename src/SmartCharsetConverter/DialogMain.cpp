@@ -133,6 +133,7 @@ void DialogMain::RefreshInterfaceByCurrentLanguage() noexcept {
     rightMenu->SetItemTextById(ID_SPECIFY_ORIGIN_CHARSET,
                                languageService->GetWString(v0_2::StringId::SPECIFY_ORIGIN_ENCODING));
     rightMenu->SetItemTextById(ID_REMOVE_ITEM, languageService->GetWString(v0_2::StringId::REMOVE));
+    rightMenu->SetItemTextById(ID_SELECT_ALL, languageService->GetWString(v0_2::StringId::SELECT_ALL));
 }
 
 BOOL DialogMain::OnInitDialog(CWindow wndFocus, LPARAM lInitParam) {
@@ -219,6 +220,8 @@ BOOL DialogMain::OnInitDialog(CWindow wndFocus, LPARAM lInitParam) {
         CharsetCode code = CommandIdToCharsetCode(commandId);
         specifyOriginCharsetMenu.AppendItem(commandId, utf8_to_wstring(ToViewCharsetName(code)));
     }
+    // 添加全选菜单项
+    rightMenu->AppendItem(ID_SELECT_ALL, L"Select All");
 
     selectLanguageMenu = std::make_unique<TPopupMenu>(IDR_MENU_SELECT_LANGUAGES);
     TMenu &languageSubMenu = selectLanguageMenu->SetItemToBeContainer(ID_LANGUAGE);
@@ -968,6 +971,11 @@ LRESULT DialogMain::OnRemoveItem(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
         listview.SetItemText(i, static_cast<int>(ListViewColumn::INDEX), to_tstring(i + 1).c_str());
     }
 
+    return 0;
+}
+
+LRESULT DialogMain::OnSelectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/) {
+    listview.SelectAll();
     return 0;
 }
 

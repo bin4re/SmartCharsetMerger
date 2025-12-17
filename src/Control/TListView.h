@@ -13,6 +13,7 @@
 class TListView : public CWindowImpl<TListView, CListViewCtrl> {
 public:
     BEGIN_MSG_MAP_EX(TListView)
+    MSG_WM_KEYDOWN(OnKeyDown)
     MESSAGE_HANDLER(WM_DROPFILES, OnDropFiles)
     END_MSG_MAP()
 
@@ -22,8 +23,19 @@ public:
 
     std::tstring GetItemText(int nItem, int nSubItem) const;
 
+    void SelectAll() noexcept;
+
     LRESULT OnDropFiles(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled) {
         SendMessage(GetParent(), uMsg, wParam, lParam);
         return 0;
+    }
+
+    void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
+        // Ctrl+A 全选
+        if (nChar == 'A' && (GetKeyState(VK_CONTROL) & 0x8000)) {
+            SelectAll();
+            return;
+        }
+        SetMsgHandled(FALSE);
     }
 };
