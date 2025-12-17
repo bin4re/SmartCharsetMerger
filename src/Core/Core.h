@@ -87,7 +87,8 @@ public:
 
     const std::unique_ptr<uchardet, std::function<void(uchardet *)>> &GetUCharDet() const;
 
-    void SetFilterMode(Configuration::FilterMode mode);
+    void SetDetectMode(Configuration::DetectMode mode);
+    void SetFileFilterMode(Configuration::FileFilterMode mode);
     void SetFilterRule(const std::string &rule);
 
     void SetOutputTarget(Configuration::OutputTarget outputTarget);

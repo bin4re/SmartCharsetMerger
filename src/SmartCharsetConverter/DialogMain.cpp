@@ -79,14 +79,23 @@ void DialogMain::OnClose() {
 void DialogMain::RefreshInterfaceByCurrentLanguage() noexcept {
     // set controls by language settings
     GetDlgItem(IDC_STATIC_FILE_LISTS).SetWindowTextW(languageService->GetWString(v0_2::StringId::FILE_LISTS).c_str());
-    GetDlgItem(IDC_STATIC_SET_FILTER_MODE)
-        .SetWindowTextW(languageService->GetWString(v0_2::StringId::SET_FILTER_MODE).c_str());
-    GetDlgItem(IDC_RADIO_STRETEGY_NO_FILTER)
+
+    // 识别模式
+    GetDlgItem(IDC_STATIC_SET_DETECT_MODE)
+        .SetWindowTextW(languageService->GetWString(v0_2::StringId::SET_DETECT_MODE).c_str());
+    GetDlgItem(IDC_RADIO_DETECT_AUTO)
+        .SetWindowTextW(languageService->GetWString(v0_2::StringId::AUTO_DETECT).c_str());
+    GetDlgItem(IDC_RADIO_DETECT_MANUAL)
+        .SetWindowTextW(languageService->GetWString(v0_2::StringId::MANUAL_SPECIFY).c_str());
+
+    // 文件过滤模式
+    GetDlgItem(IDC_STATIC_SET_FILE_FILTER)
+        .SetWindowTextW(languageService->GetWString(v0_2::StringId::SET_FILE_FILTER).c_str());
+    GetDlgItem(IDC_RADIO_FILTER_NONE)
         .SetWindowTextW(languageService->GetWString(v0_2::StringId::NO_FILTER).c_str());
-    GetDlgItem(IDC_RADIO_STRETEGY_SMART)
-        .SetWindowTextW(languageService->GetWString(v0_2::StringId::SMART_FILE_DETECTION).c_str());
-    GetDlgItem(IDC_RADIO_STRETEGY_MANUAL)
-        .SetWindowTextW(languageService->GetWString(v0_2::StringId::USE_FILE_EXTENSION).c_str());
+    GetDlgItem(IDC_RADIO_FILTER_BY_EXT)
+        .SetWindowTextW(languageService->GetWString(v0_2::StringId::FILTER_BY_EXTENSION).c_str());
+
     GetDlgItem(IDC_STATIC_ADD_FILES_OR_FOLDER)
         .SetWindowTextW(languageService->GetWString(v0_2::StringId::ADD_FILES_OR_FOLDER).c_str());
     GetDlgItem(IDC_BUTTON_ADD_FILES).SetWindowTextW(languageService->GetWString(v0_2::StringId::ADD_FILES).c_str());
@@ -104,6 +113,8 @@ void DialogMain::RefreshInterfaceByCurrentLanguage() noexcept {
         .SetWindowTextW(languageService->GetWString(v0_2::StringId::CHANGE_LINE_BREAKS).c_str());
     GetDlgItem(IDC_BUTTON_START).SetWindowTextW(languageService->GetWString(v0_2::StringId::START_CONVERT).c_str());
     GetDlgItem(IDC_BUTTON_CLEAR).SetWindowTextW(languageService->GetWString(v0_2::StringId::CLEAR_LISTS).c_str());
+    GetDlgItem(IDC_BUTTON_MERGE_EXPORT)
+        .SetWindowTextW(languageService->GetWString(v0_2::StringId::MERGE_EXPORT).c_str());
 
     listview.SetColumnText(static_cast<int>(ListViewColumn::INDEX),
                            languageService->GetWString(v0_2::StringId::INDEX).c_str());
@@ -136,8 +147,9 @@ BOOL DialogMain::OnInitDialog(CWindow wndFocus, LPARAM lInitParam) {
 
     BOOL bHandle = true;
 
-    // 包含/排除指定后缀
-    SetFilterMode(core->GetConfig().filterMode);
+    // 初始化识别模式和文件过滤模式
+    SetDetectMode(core->GetConfig().detectMode);
+    SetFileFilterMode(core->GetConfig().fileFilterMode);
     GetDlgItem(IDC_EDIT_INCLUDE_TEXT).SetWindowTextW(utf8_to_wstring(core->GetConfig().includeRule).c_str());
 
     // target
@@ -229,27 +241,20 @@ BOOL DialogMain::OnInitDialog(CWindow wndFocus, LPARAM lInitParam) {
     return 0;
 }
 
-void DialogMain::SetFilterMode(Configuration::FilterMode mode) {
-    core->SetFilterMode(mode);
+void DialogMain::SetDetectMode(Configuration::DetectMode mode) {
+    core->SetDetectMode(mode);
 
-    CButton(GetDlgItem(IDC_RADIO_STRETEGY_NO_FILTER)).SetCheck(false);
-    CButton(GetDlgItem(IDC_RADIO_STRETEGY_SMART)).SetCheck(false);
-    CButton(GetDlgItem(IDC_RADIO_STRETEGY_MANUAL)).SetCheck(false);
-    switch (mode) {
-    case Configuration::FilterMode::NO_FILTER:
-        CButton(GetDlgItem(IDC_RADIO_STRETEGY_NO_FILTER)).SetCheck(true);
-        break;
-    case Configuration::FilterMode::SMART:
-        CButton(GetDlgItem(IDC_RADIO_STRETEGY_SMART)).SetCheck(true);
-        break;
-    case Configuration::FilterMode::ONLY_SOME_EXTANT:
-        CButton(GetDlgItem(IDC_RADIO_STRETEGY_MANUAL)).SetCheck(true);
-        break;
-    default:
-        assert(0);
-    }
+    CButton(GetDlgItem(IDC_RADIO_DETECT_AUTO)).SetCheck(mode == Configuration::DetectMode::AUTO_DETECT);
+    CButton(GetDlgItem(IDC_RADIO_DETECT_MANUAL)).SetCheck(mode == Configuration::DetectMode::MANUAL);
+}
 
-    GetDlgItem(IDC_EDIT_INCLUDE_TEXT).EnableWindow(mode == Configuration::FilterMode::ONLY_SOME_EXTANT);
+void DialogMain::SetFileFilterMode(Configuration::FileFilterMode mode) {
+    core->SetFileFilterMode(mode);
+
+    CButton(GetDlgItem(IDC_RADIO_FILTER_NONE)).SetCheck(mode == Configuration::FileFilterMode::NO_FILTER);
+    CButton(GetDlgItem(IDC_RADIO_FILTER_BY_EXT)).SetCheck(mode == Configuration::FileFilterMode::BY_EXTENSION);
+
+    GetDlgItem(IDC_EDIT_INCLUDE_TEXT).EnableWindow(mode == Configuration::FileFilterMode::BY_EXTENSION);
 }
 
 void DialogMain::SetOutputTarget(Configuration::OutputTarget outputTarget) {
@@ -292,13 +297,12 @@ std::vector<std::string> DialogMain::AddItems(const std::vector<std::string> &pa
     // 后缀
     unordered_set<string> filterDotExts;
 
-    switch (core->GetConfig().filterMode) {
-    case Configuration::FilterMode::NO_FILTER:
+    // 根据文件过滤模式决定后缀过滤
+    switch (core->GetConfig().fileFilterMode) {
+    case Configuration::FileFilterMode::NO_FILTER:
         break;
-    case Configuration::FilterMode::SMART: // 智能识别文本
-        break;
-    case Configuration::FilterMode::ONLY_SOME_EXTANT:
-        // 只包括指定后缀
+    case Configuration::FileFilterMode::BY_EXTENSION:
+        // 按后缀过滤
         try {
             CheckAndTraversalIncludeRule([&](const string &dotExt) {
                 filterDotExts.insert(dotExt);
@@ -391,7 +395,7 @@ AddItemsAbort:
         }
 
         s += u8"\r\n\r\n";
-        s += languageService->GetUtf8String(v0_2::StringId::TIPS_USE_NO_FILTER);
+        s += languageService->GetUtf8String(v0_2::StringId::TIPS_USE_MANUAL_MODE);
 
         PostUIFunc([this, s]() {
             MessageBox(utf8_to_wstring(s).c_str(), languageService->GetWString(v0_2::StringId::PROMPT).c_str(),
@@ -555,21 +559,27 @@ void DialogMain::StartConvert(const std::vector<std::pair<int, bool>> &restore, 
     return;
 }
 
-LRESULT DialogMain::OnBnClickedRadioStretegyNoFilter(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
-                                                     BOOL & /*bHandled*/) {
-    SetFilterMode(Configuration::FilterMode::NO_FILTER);
+LRESULT DialogMain::OnBnClickedRadioDetectAuto(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
+                                                BOOL & /*bHandled*/) {
+    SetDetectMode(Configuration::DetectMode::AUTO_DETECT);
     return 0;
 }
 
-LRESULT DialogMain::OnBnClickedRadioStretegySmart(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
+LRESULT DialogMain::OnBnClickedRadioDetectManual(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
                                                   BOOL & /*bHandled*/) {
-    SetFilterMode(Configuration::FilterMode::SMART);
+    SetDetectMode(Configuration::DetectMode::MANUAL);
     return 0;
 }
 
-LRESULT DialogMain::OnBnClickedRadioStretegyManual(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
-                                                   BOOL & /*bHandled*/) {
-    SetFilterMode(Configuration::FilterMode::ONLY_SOME_EXTANT);
+LRESULT DialogMain::OnBnClickedRadioFilterNone(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
+                                                BOOL & /*bHandled*/) {
+    SetFileFilterMode(Configuration::FileFilterMode::NO_FILTER);
+    return 0;
+}
+
+LRESULT DialogMain::OnBnClickedRadioFilterByExt(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
+                                                 BOOL & /*bHandled*/) {
+    SetFileFilterMode(Configuration::FileFilterMode::BY_EXTENSION);
     return 0;
 }
 
@@ -640,13 +650,13 @@ void DialogMain::CheckAndTraversalIncludeRule(std::function<void(const std::stri
 LRESULT DialogMain::OnBnClickedButtonAddFiles(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
                                               BOOL & /*bHandled*/) try {
     vector<pair<tstring, tstring>> dialogFilter;
-    switch (core->GetConfig().filterMode) {
-    case Configuration::FilterMode::NO_FILTER:
-    case Configuration::FilterMode::SMART: // 智能识别文本
+    // 根据文件过滤模式决定对话框过滤器
+    switch (core->GetConfig().fileFilterMode) {
+    case Configuration::FileFilterMode::NO_FILTER:
         dialogFilter = {{languageService->GetWString(v0_2::StringId::ALL_FILES) + L"*.*", L"*.*"}};
         break;
-    case Configuration::FilterMode::ONLY_SOME_EXTANT: {
-        // 只包括指定后缀
+    case Configuration::FileFilterMode::BY_EXTENSION: {
+        // 按后缀过滤
         tstring filterExtsStr; // dialog的过滤器要求;分割
         CheckAndTraversalIncludeRule([&](const string &dotExt) {
             filterExtsStr += utf8_to_wstring("*" + dotExt + ";");
@@ -1109,7 +1119,7 @@ LRESULT DialogMain::OnUser(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 std::vector<pair<int, bool>> DialogMain::SetBusyState() noexcept {
     // 遍历控件，如果是启用状态，那么设置为disable，并在restore中记下，留待日后恢复
     vector<pair<int, bool>> restore;
-    for (auto id = IDC_RADIO_STRETEGY_SMART; id <= IDC_RADIO_CR; ++id) {
+    for (auto id = IDC_RADIO_DETECT_AUTO; id <= IDC_RADIO_CR; ++id) {
         if (::GetDlgItem(m_hWnd, id) != NULL) {
             auto wnd = GetDlgItem(id);
             if (wnd.IsWindowEnabled()) {

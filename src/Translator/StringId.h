@@ -72,6 +72,15 @@ enum class StringId {
     REMOVE,
     SELECT_FOLDER,
 
+    // 新增：解耦过滤设置
+    SET_DETECT_MODE,      // 157: 设置识别模式
+    AUTO_DETECT,          // 158: 智能识别
+    MANUAL_SPECIFY,       // 159: 手动指定
+    SET_FILE_FILTER,      // 160: 设置文件过滤
+    FILTER_BY_EXTENSION,  // 161: 按后缀过滤
+    TIPS_USE_MANUAL_MODE, // 162: 提示使用手动模式
+    MERGE_EXPORT,         // 163: 合并导出
+
     END
 };
 

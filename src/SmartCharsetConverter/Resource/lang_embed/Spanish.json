@@ -30,7 +30,7 @@
 		[109,"Reason:"],
 		[110,"Se detectaron {} archivos que no eran archivos de texto, o no se detectó ningún juego de caracteres:"],
 		[111,"...etc."],
-		[112, "Consejo: use el modo \"Sin filtro\" para agregar nuevamente, y puede hacer clic derecho en el cuadro de lista para especificar la codificación original manualmente."],
+		[112, "Consejo: use el modo \"Especificar manualmente\" para agregar nuevamente, y puede hacer clic derecho en el cuadro de lista para especificar la codificación original manualmente."],
 		[113,"Consejo"],
 		[114,"No hay archivos que convertir."],
 		[115,"El directorio de salida no es válido."],
@@ -58,8 +58,8 @@
 		[137,"Error al abrir el archivo:"],
 		[138,"Lista de archivos"],
 		[139,"1. Configurar filtro de archivos:"],
-		[140,"Sin filtrar archivos"],
-		[141,"Detección inteligente"],
+		[140,"Sin filtro"],
+		[141,"Detección automática"],
 		[142,"Usar extensión:"],
 		[143,"2. Añadir archivos / carpetas:"],
 		[144,"Archivos"],
@@ -74,6 +74,13 @@
 		[153,"Abrir con el Bloc de notas"],
 		[154,"Especificar la codificación original"],
 		[155,"Quitar"],
-		[156,"Seleccionar carpeta"]
+		[156,"Seleccionar carpeta"],
+		[157,"0. Modo de detección:"],
+		[158,"Detección automática"],
+		[159,"Especificar manualmente"],
+		[160,"1. Filtro de archivos:"],
+		[161,"Por extensión:"],
+		[162,"Consejo: use el modo \"Especificar manualmente\" para agregar nuevamente, y puede hacer clic derecho en el cuadro de lista para especificar la codificación original manualmente."],
+		[163,"Combinar y Exportar"]
 	]
 }

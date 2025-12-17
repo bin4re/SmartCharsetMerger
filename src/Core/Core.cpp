@@ -317,8 +317,13 @@ const std::unique_ptr<uchardet, std::function<void(uchardet *)>> &Core::GetUChar
     return det;
 }
 
-void Core::SetFilterMode(Configuration::FilterMode mode) {
-    config.filterMode = mode;
+void Core::SetDetectMode(Configuration::DetectMode mode) {
+    config.detectMode = mode;
+    WriteConfigToFile();
+}
+
+void Core::SetFileFilterMode(Configuration::FileFilterMode mode) {
+    config.fileFilterMode = mode;
     WriteConfigToFile();
 }
 
@@ -366,8 +371,8 @@ void RemoveASCII(std::vector<char> &data) noexcept {
 }
 
 Core::AddItemResult Core::AddItem(const std::string &filename, const std::unordered_set<std::string> &filterDotExts) {
-    // 如果是只包括指定后缀的模式，且文件后缀不符合，则忽略掉，且不提示
-    if (GetConfig().filterMode == Configuration::FilterMode::ONLY_SOME_EXTANT) {
+    // 文件后缀过滤
+    if (GetConfig().fileFilterMode == Configuration::FileFilterMode::BY_EXTENSION) {
         auto ext = GetExtend(filename);
         auto dotExt = "." + tolower(ext);
 
@@ -384,8 +389,11 @@ Core::AddItemResult Core::AddItem(const std::string &filename, const std::unorde
     // 读入文件，只读入部分。因为读入大文件会占用太长时间。
     auto [buf, bufSize] = ReadFileToBuffer(filename, tryReadSize);
 
-    // 识别字符集
-    auto charsetCode = DetectEncoding(det.get(), buf.get(), bufSize);
+    // 根据识别模式决定是否智能识别
+    CharsetCode charsetCode = CharsetCode::UNKNOWN;
+    if (GetConfig().detectMode == Configuration::DetectMode::AUTO_DETECT) {
+        charsetCode = DetectEncoding(det.get(), buf.get(), bufSize);
+    }
 
     std::u16string content;
 
@@ -393,31 +401,17 @@ Core::AddItemResult Core::AddItem(const std::string &filename, const std::unorde
     case CharsetCode::EMPTY:
         break;
 
-    // 如果没有识别出编码集
     case (CharsetCode::UNKNOWN): {
-        switch (GetConfig().filterMode) {
-        // 如果是智能模式或者后缀模式，不添加这个文件，但要抛出异常，让UI弹出提示
-        case Configuration::FilterMode::SMART:
-        case Configuration::FilterMode::ONLY_SOME_EXTANT:
+        // 智能识别模式下，未识别的文件抛出异常
+        if (GetConfig().detectMode == Configuration::DetectMode::AUTO_DETECT) {
             throw io_error_ignore();
-        // 如果是不过滤模式
-        case Configuration::FilterMode::NO_FILTER: {
-            // 强行添加
-
-            auto fileSize = GetFileSize(filename);
-
-            // 成功添加
-            listFileNames.insert(filename);
-
-            return AddItemResult{false, fileSize, charsetCode, LineBreaks::UNKNOWN, {}};
         }
-        default:
-            assert(0);
-        }
-        break;
+        // 手动指定模式下，强行添加，用户需要手动指定编码
+        auto fileSize = GetFileSize(filename);
+        listFileNames.insert(filename);
+        return AddItemResult{false, fileSize, charsetCode, LineBreaks::UNKNOWN, {}};
     }
     default:
-        // 根据uchardet得出的字符集解码
         content = DecodeToLimitBytes(std::string_view(buf.get(), bufSize), MAX_STRING_PIECE_LENGTH, charsetCode);
     }
 
@@ -435,8 +429,8 @@ Core::AddItemResult Core::AddItem(const std::string &filename, const std::unorde
         wholeUtfStr = Decode(std::string_view(buf.get(), bufSize), charsetCode);
     } catch (const IllegalCharFoundError &err) {
         (err);
-        // if current is NO-FILTER mode, treat it as UNKOWN charset
-        if (GetConfig().filterMode != Configuration::FilterMode::NO_FILTER) {
+        // 手动指定模式下，即使解码出错也添加到列表
+        if (GetConfig().detectMode != Configuration::DetectMode::MANUAL) {
             throw;
         }
         listFileNames.insert(filename);
@@ -644,10 +638,26 @@ void Core::ReadConfigFromFile() {
         return;
     }
 
-    auto [buf, bufSize] = ReadFileToBuffer(configFileName);
+    try {
+        auto [buf, bufSize] = ReadFileToBuffer(configFileName);
 
-    nlohmann::json j = nlohmann::json::parse(std::string_view(buf.get(), bufSize));
-    from_json(j, config);
+        // 如果文件为空，使用默认配置
+        if (bufSize == 0) {
+            return;
+        }
+
+        nlohmann::json j = nlohmann::json::parse(std::string_view(buf.get(), bufSize));
+        from_json(j, config);
+    } catch (const nlohmann::json::exception &e) {
+        // JSON 解析或字段读取失败，使用默认配置
+        // 可能是配置文件损坏或格式不兼容
+        (void)e; // 忽略异常，使用默认配置
+        config = Configuration();
+    } catch (const std::exception &e) {
+        // 其他异常（如文件读取失败），使用默认配置
+        (void)e;
+        config = Configuration();
+    }
 }
 
 void Core::WriteConfigToFile() {

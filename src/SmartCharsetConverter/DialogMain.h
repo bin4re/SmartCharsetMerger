@@ -72,7 +72,8 @@ private:
 
     BOOL OnInitDialog(CWindow wndFocus, LPARAM lInitParam);
 
-    void SetFilterMode(Configuration::FilterMode mode);
+    void SetDetectMode(Configuration::DetectMode mode);
+    void SetFileFilterMode(Configuration::FileFilterMode mode);
 
     void SetOutputTarget(Configuration::OutputTarget outputTarget);
 
@@ -149,8 +150,13 @@ private:
     MSG_WM_INITDIALOG(OnInitDialog)
     MSG_WM_CLOSE(OnClose)
 
-    COMMAND_HANDLER(IDC_RADIO_STRETEGY_SMART, BN_CLICKED, OnBnClickedRadioStretegySmart)
-    COMMAND_HANDLER(IDC_RADIO_STRETEGY_MANUAL, BN_CLICKED, OnBnClickedRadioStretegyManual)
+    // 识别模式
+    COMMAND_HANDLER(IDC_RADIO_DETECT_AUTO, BN_CLICKED, OnBnClickedRadioDetectAuto)
+    COMMAND_HANDLER(IDC_RADIO_DETECT_MANUAL, BN_CLICKED, OnBnClickedRadioDetectManual)
+    // 文件过滤模式
+    COMMAND_HANDLER(IDC_RADIO_FILTER_NONE, BN_CLICKED, OnBnClickedRadioFilterNone)
+    COMMAND_HANDLER(IDC_RADIO_FILTER_BY_EXT, BN_CLICKED, OnBnClickedRadioFilterByExt)
+
     COMMAND_HANDLER(IDC_RADIO_TO_ORIGIN, BN_CLICKED, OnBnClickedRadioToOrigin)
     COMMAND_HANDLER(IDC_RADIO_TO_DIR, BN_CLICKED, OnBnClickedRadioToDir)
     COMMAND_HANDLER(IDC_RADIO_UTF8, BN_CLICKED, OnBnClickedRadioUtf8)
@@ -173,7 +179,6 @@ private:
     COMMAND_RANGE_HANDLER(SELECT_LANUAGE_ID_START, GetSelectLanguageIdEnd(), OnSelectLanguage)
 
     COMMAND_HANDLER(IDC_EDIT_INCLUDE_TEXT, EN_CHANGE, OnEnChangeEditIncludeText)
-    COMMAND_HANDLER(IDC_RADIO_STRETEGY_NO_FILTER, BN_CLICKED, OnBnClickedRadioStretegyNoFilter)
     NOTIFY_HANDLER(IDC_SYSLINK1, NM_CLICK, OnNMClickSyslink1)
     COMMAND_HANDLER(IDC_CHECK_CONVERT_RETURN, BN_CLICKED, OnBnClickedCheckConvertReturn)
     COMMAND_HANDLER(IDC_RADIO_CRLF, BN_CLICKED, OnBnClickedRadioCrlf)
@@ -189,8 +194,13 @@ private:
 
     MESSAGE_HANDLER(WM_MY_MESSAGE, OnUser)
     END_MSG_MAP()
-    LRESULT OnBnClickedRadioStretegySmart(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
-    LRESULT OnBnClickedRadioStretegyManual(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
+
+    LRESULT OnBnClickedRadioDetectAuto(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
+    LRESULT OnBnClickedRadioDetectManual(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
+
+    LRESULT OnBnClickedRadioFilterNone(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
+    LRESULT OnBnClickedRadioFilterByExt(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
+
     LRESULT OnBnClickedRadioToOrigin(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
     LRESULT OnBnClickedRadioToDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
     LRESULT OnBnClickedRadioUtf8(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
@@ -218,7 +228,6 @@ private:
     LRESULT OnSelectLanguage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
 
     LRESULT OnEnChangeEditIncludeText(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
-    LRESULT OnBnClickedRadioStretegyNoFilter(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
     LRESULT OnNMClickSyslink1(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL & /*bHandled*/);
     LRESULT OnBnClickedCheckConvertReturn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);
     LRESULT OnBnClickedRadioCrlf(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL & /*bHandled*/);

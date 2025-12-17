@@ -30,7 +30,7 @@
 		[109,"Reason:"],
 		[110,"{} files were detected to be non-text files, or no character set was detected:"],
 		[111,"...etc."],
-		[112, "Tip: Use the \"No Filter\" mode to add again, and you can right-click in the list box to specify the original encoding manually."],
+		[112, "Tip: Use \"Manual Specify\" detection mode to add again, and you can right-click in the list box to specify the original encoding manually."],
 		[113,"Tip"],
 		[114,"There are no files to convert."],
 		[115,"The output directory is invalid."],
@@ -58,8 +58,8 @@
 		[137,"Failed to open file:"],
 		[138,"File List"],
 		[139,"1. Setup Files Filter:"],
-		[140,"No Filter Files"],
-		[141,"Smart File Detection"],
+		[140,"No Filter"],
+		[141,"Auto Detect"],
 		[142,"Use File Extension:"],
 		[143,"2. Add Files / Folders:"],
 		[144,"Files"],
@@ -74,6 +74,13 @@
 		[153,"Open with Notepad"],
 		[154,"Specify original encoding"],
 		[155,"Remove"],
-		[156,"Select Folder"]
+		[156,"Select Folder"],
+		[157,"0. Detection Mode:"],
+		[158,"Auto Detect"],
+		[159,"Manual Specify"],
+		[160,"1. File Filter:"],
+		[161,"By Extension:"],
+		[162,"Tip: Use \"Manual Specify\" detection mode to add again, and you can right-click in the list box to specify the original encoding manually."],
+		[163,"Merge Export"]
 	]
 }

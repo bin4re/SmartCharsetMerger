@@ -89,7 +89,8 @@ int CLIMain(const std::vector<std::string> &args) noexcept {
     CoreInitOption coreInitOpt;
     Core core(configFileName, coreInitOpt);
 
-    core.SetFilterMode(Configuration::FilterMode::NO_FILTER);
+    core.SetDetectMode(Configuration::DetectMode::AUTO_DETECT);
+    core.SetFileFilterMode(Configuration::FileFilterMode::NO_FILTER);
 
     std::stringstream ssErr;
     std::stringstream ssOutput;
