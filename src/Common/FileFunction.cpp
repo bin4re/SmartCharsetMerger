@@ -161,7 +161,7 @@ void TFileDialog::SetResult(const std::tstring &s) {
 }
 
 bool TFileDialog::Save() {
-    ofn.Flags = OFN_PATHMUSTEXIST;
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 
     // 设为空可以自动加上选择的后缀名，否则无论选什么后缀，
     // 只要没有输入.txt这种，都是无后缀

@@ -13,6 +13,7 @@
 #include <set>
 #include <regex>
 #include <filesystem>
+#include <shlobj.h>
 
 #undef min
 #undef max
@@ -879,6 +880,9 @@ void DialogMain::MergeAndExport(const std::vector<std::pair<int, bool>> &restore
     // 5. 写入文件
     try {
         WriteStringToFile(destFilename, ss.str());
+
+        // 显式通知资源管理器文件已创建，强制刷新视图
+        SHChangeNotify(SHCNE_CREATE, SHCNF_PATH, utf8_to_wstring(destFilename).c_str(), NULL);
     } catch (const std::exception &err) {
         string errorMsg = "Failed to write to file: " + destFilename + "\nReason: " + err.what();
         PostUIFunc([this, errorMsg]() {
