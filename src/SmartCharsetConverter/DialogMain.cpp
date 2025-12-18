@@ -18,7 +18,7 @@
 #undef min
 #undef max
 
-const std::tstring appTitle = TEXT("SmartCharsetConverter v0.9.3 by Tom Willow");
+const std::tstring appTitle = TEXT("SmartCharsetMerger by bin4re");
 
 const std::string configFileName = "SmartCharsetConverter.json";
 
@@ -1058,7 +1058,7 @@ LRESULT DialogMain::OnEnChangeEditIncludeText(WORD /*wNotifyCode*/, WORD /*wID*/
 }
 
 LRESULT DialogMain::OnNMClickSyslink1(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL & /*bHandled*/) {
-    HINSTANCE r = ShellExecute(NULL, L"open", L"https://github.com/tomwillow/SmartCharsetConverter/releases", NULL,
+    HINSTANCE r = ShellExecute(NULL, L"open", L"https://github.com/bin4re/SmartCharsetMerger/", NULL,
                                NULL, SW_SHOWNORMAL);
 
     return 0;

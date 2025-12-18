@@ -1,9 +1,9 @@
 {
 	"language":"Simplified Chinese",
 	"langId": 2052,
-	"author":"Tom Willow",
+	"author":"bin4re",
 	"version":"0.2",
-	"date":"2024-12-22",
+	"date":"2025-12-18",
 	"data":[
 		[1,"转换到目标编码会丢失字符：{}"],
 		[2,"内容包含无效字符"],

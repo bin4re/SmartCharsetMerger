@@ -1,9 +1,9 @@
 {
 	"language":"Spanish",
 	"langId": 1252,
-	"author":"Carlos Sánchez, Last Edited by Tom Willow",
+	"author":"bin4re",
 	"version":"0.2",
-	"date":"2024-12-22",
+	"date":"2025-12-18",
 	"data":[
 		[1,"Algunos caracteres se perderán al convertir a la codificación de destino: {}"],
 		[2,"El contenido incluye caracteres no válidos"],

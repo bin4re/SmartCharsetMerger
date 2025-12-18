@@ -18,8 +18,8 @@ using std::cout;
 const std::string configFileName = "SmartCharsetConverter.json";
 
 const char usage[] = u8R"(
-SmartCharsetConverter --help [<options>]
-SmartCharsetConverter --input <path>... --target_charset <charset> [--target_linebreak <linebreak>] [--output_origin | --output_dir <dir>]
+SmartCharsetMerger --help [<options>]
+SmartCharsetMerger --input <path>... --target_charset <charset> [--target_linebreak <linebreak>] [--output_origin | --output_dir <dir>]
 
 --help [<options>]
   打印帮助信息。

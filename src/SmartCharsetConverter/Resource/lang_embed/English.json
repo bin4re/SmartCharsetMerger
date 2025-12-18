@@ -1,9 +1,9 @@
 {
 	"language":"English",
 	"langId": 1033,
-	"author":"Tom Willow",
+	"author":"bin4re",
 	"version":"0.2",
-	"date":"2024-12-22",
+	"date":"2025-12-18",
 	"data":[
 		[1,"Some characters will be lost when converting to the target encoding: {}"],
 		[2,"Content contains invalid characters"],
